@@ -243,7 +243,7 @@ Advanced medical education module built around clinical reasoning.
 
 ### Features
 
-* PhD-level clinical vignettes
+* Advanced-level clinical vignettes
 * Differential diagnosis practice
 * Background preloading
 * Instant case transitions
