@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Void Killer — Anti-Boredom Grimoire</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Offline Mode / API Key Warning Indicator -->
+  <div id="offline-banner">
+    ✦ OFFLINE MODE ACTIVE — FALLBACKS LOADED ✦
+  </div>
+
+  <div id="app-container">
+    
+    <!-- HEADER / HERO HUB -->
+    <header>
+      <div class="brand-section">
+        <h1 class="brand-title">THE VOID KILLER</h1>
+        <span class="brand-subtitle">ADHD ANTI-BOREDOM GRIMOIRE</span>
+      </div>
+
+      <!-- XP Bar / Elden Ring Stamina Hud -->
+      <div class="xp-hud-container">
+        <div class="xp-label-row">
+          <span class="char-title" id="player-level-title">Level 1: The Unknowing Vessel</span>
+          <span class="xp-text" id="player-xp-text">0 / 100 XP</span>
+        </div>
+        <div class="xp-bar-outer">
+          <div class="xp-bar-inner" id="player-xp-bar"></div>
+        </div>
+      </div>
+
+      <!-- Streak Rune Stones Row -->
+      <div class="streak-hud-container">
+        <span class="streak-label">Daily Streak:</span>
+        <div class="rune-stones-row" id="streak-runes-row">
+          <!-- 5 SVG Rune Stones generated programmatically -->
+        </div>
+      </div>
+
+      <!-- Settings cog and light/dark toggle -->
+      <div class="header-actions">
+        <button id="toggle-light-mode" class="btn-stone" title="Toggle Light/Parchment Mode">
+          <!-- Light Toggle Icon -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+        <button id="btn-api-setup" class="btn-stone" title="Gemini API Key Key Config">
+          <!-- Cog Wheel Icon -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- CORE SHELL GRID -->
+    <div class="main-shell">
+      
+      <!-- Nav Sidebar (Baldur's Gate Choose Your Dialogue Style) -->
+      <aside class="nav-sidebar">
+        <ul class="nav-list">
+          <li>
+            <button class="nav-item-btn active" data-tab="quests">
+              <span class="item-num">[1]</span> Daily Quest Board
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-tab="language">
+              <span class="item-num">[2]</span> Icelandic Trainer
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-tab="athlete">
+              <span class="item-num">[3]</span> Desk Athlete
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-tab="quiz">
+              <span class="item-num">[4]</span> Parasite Quiz
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-tab="bestiary">
+              <span class="item-num">[5]</span> Parasite Bestiary
+            </button>
+          </li>
+          <li>
+            <button class="nav-item-btn" data-tab="achievements">
+              <span class="item-num">[6]</span> Achievements
+            </button>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Display Content Frame -->
+      <main class="content-panel">
+        <div class="panel-header">
+          <h2 class="panel-title" id="active-panel-title">Daily Quests</h2>
+          <span class="ui-label" id="panel-status-label">Quests Active</span>
+        </div>
+        <div class="panel-body" id="active-panel-view">
+          <!-- Views will inject here dynamically -->
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- API KEY SETUP MODAL -->
+  <div class="modal-overlay" id="modal-api-setup">
+    <div class="modal-content">
+      <h2>Gemini API Setup</h2>
+      <p style="margin: 0.5rem 0 1.5rem 0; font-family: 'EB Garamond'; color: var(--text-muted);">
+        Enter your Gemini API key to activate advanced parasitology cases and dynamic Icelandic mini-dialogues. Keys are stored safely in local browser storage.
+      </p>
+      
+      <div class="input-group">
+        <label for="api-key-input" class="ui-label">API KEY</label>
+        <input type="password" id="api-key-input" class="input-grimoire" placeholder="AIzaSy...">
+      </div>
+
+      <div style="display:flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+        <button id="btn-api-offline" class="btn-stone danger">Enter Offline Mode</button>
+        <button id="btn-api-save" class="btn-stone">Save Key & Bind Rune</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOAT FOCUS BUTTON (Candle style) -->
+  <button class="btn-focus-toggle" id="focus-mode-toggle" title="Just One Thing Mode">
+    <!-- SVG Candle Icon -->
+    <svg viewBox="0 0 24 24">
+      <path d="M12,2A1,1 0 0,0 11,3V6H13V3A1,1 0 0,0 12,2M12,7C9.24,7 7,9.24 7,12V21A1,1 0 0,0 8,22H16A1,1 0 0,0 17,21V12C17,9.24 14.76,7 12,7M12,9C13.66,9 15,10.34 15,12V20H9V12C9,10.34 10.34,9 12,9M12,4.5C12.28,4.5 12.5,4.72 12.5,5C12.5,5.28 12.28,5.5 12,5.5C11.72,5.5 11.5,5.28 11.5,5C11.5,4.72 11.72,4.5 12,4.5Z" />
+    </svg>
+  </button>
+
+  <!-- ES6 App Modules Entry -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
