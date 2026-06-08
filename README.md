@@ -49,7 +49,7 @@ index.html
 | File                 | Description                                                                                           |
 | -------------------- | ----------------------------------------------------------------------------------------------------- |
 | `index.html`         | Single-page application entry point                                                                   |
-| `css/style.css`      | Elden Ring / Baldur's Gate inspired styling, rarity effects, SVG noise overlays, curved UI components |
+| `css/style.css`      | Dark Game inspired styling, rarity effects, SVG noise overlays, curved UI components |
 | `js/app.js`          | Navigation router, theme switching, focus mode, ambient audio                                         |
 | `js/api.js`          | Gemini API queue system, rate limiting, offline detection                                             |
 | `js/gamification.js` | XP, levels, titles, achievements, streak system                                                       |

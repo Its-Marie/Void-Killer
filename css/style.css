@@ -148,7 +148,7 @@ header::before {
   letter-spacing: 0.2em;
 }
 
-/* Elden Ring-style Stamina Bar for XP */
+/* Stamina Bar for XP */
 .xp-hud-container {
   flex-grow: 1;
   max-width: 500px;
@@ -246,7 +246,7 @@ header::before {
   flex-grow: 1;
 }
 
-/* Left Navigation Menu (BG3 styled choose your dialogue style) */
+/* Left Navigation Menu */
 .nav-sidebar {
   background-color: var(--surface-color);
   border: double var(--border-double-width) var(--border-gold);
@@ -270,7 +270,7 @@ header::before {
   list-style: none;
 }
 
-/* BG3 Dialogue Style Nav Item */
+/* Nav Item */
 .nav-item-btn {
   width: 100%;
   text-align: left;
