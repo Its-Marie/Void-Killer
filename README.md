@@ -1,0 +1,393 @@
+# 🕯️ The Void Killer
+
+**The Void Killer** is a complete single-page dark fantasy grimoire web application designed for **ADHD-friendly learning, focus, movement, and long-term progression**.
+
+Inspired by the atmospheric aesthetics and classic occult grimoires, the application combines language learning, physical activity, medical education, and gamification into a single immersive experience.
+
+The entire application runs **fully client-side** with **no backend required**. All user progress, achievements, settings, streaks, and collected content are persisted locally via `localStorage`.
+
+---
+
+## ✨ Features
+
+* ⚔️ Daily Quest Board with dynamic objectives
+* 🇮🇸 Icelandic Language Trainer with Leitner spaced repetition
+* 🏃 Desk Athlete movement and stretching routines
+* 🦠 Advanced Parasitology Clinical Case Quiz
+* 📖 Collectible Bestiary Gallery
+* 🏆 RPG-style progression, achievements, titles, and streaks
+* 🔮 Gemini API integration with offline fallback support
+* 🌙 Dark Fantasy Grimoire UI
+* 📜 Light / Parchment Reading Mode
+* 🎵 Web Audio API chimes and reward feedback
+* 💾 100% Local Storage Persistence
+
+---
+
+# 📂 Project Structure
+
+```text
+index.html
+│
+├── css/
+│   └── style.css
+│
+└── js/
+    ├── app.js
+    ├── api.js
+    ├── gamification.js
+    ├── quests.js
+    ├── language.js
+    ├── exercises.js
+    ├── athlete.js
+    ├── quiz.js
+    └── bestiary.js
+```
+
+### Core Files
+
+| File                 | Description                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| `index.html`         | Single-page application entry point                                                                   |
+| `css/style.css`      | Elden Ring / Baldur's Gate inspired styling, rarity effects, SVG noise overlays, curved UI components |
+| `js/app.js`          | Navigation router, theme switching, focus mode, ambient audio                                         |
+| `js/api.js`          | Gemini API queue system, rate limiting, offline detection                                             |
+| `js/gamification.js` | XP, levels, titles, achievements, streak system                                                       |
+| `js/quests.js`       | Daily Quest Board and event-driven progression                                                        |
+| `js/language.js`     | Icelandic learning module                                                                             |
+| `js/exercises.js`    | Exercise database                                                                                     |
+| `js/athlete.js`      | Desk Athlete training system                                                                          |
+| `js/quiz.js`         | Clinical parasitology quiz engine                                                                     |
+| `js/bestiary.js`     | Collectible parasite gallery and fallback content                                                     |
+
+---
+
+# 🎨 Visual Design
+
+The application adopts a handcrafted dark fantasy grimoire aesthetic featuring:
+
+* Parchment-inspired panels
+* Ornamental borders
+* Dynamic rarity colors
+* SVG noise textures
+* Gold-accented progression effects
+* Animated rune streak indicators
+
+The result is a highly immersive learning environment designed to maintain engagement while minimizing ADHD-related friction.
+
+---
+
+# 🔮 Gemini API Integration
+
+### API Key Storage
+
+The Gemini API key is stored locally using:
+
+```javascript
+void_killer_api_key
+```
+
+### Request Queue
+
+To prevent excessive requests and API throttling:
+
+* Maximum: **1 request every 3 seconds**
+* Centralized queue management in `api.js`
+* Automatic request scheduling
+
+### Offline Fallback System
+
+If Gemini becomes unavailable, the application automatically falls back to local content:
+
+#### Bestiary Module
+
+```javascript
+FALLBACK_QUESTIONS
+```
+
+* 20 pre-generated clinical cases
+
+#### Icelandic Trainer
+
+```javascript
+FALLBACK_DIALOGUES
+```
+
+* 5 pre-generated learning dialogues
+
+---
+
+# ⚔️ Module 1 — Daily Quest Board
+
+The Quest Board serves as the primary daily progression system.
+
+### Features
+
+* Generates 3 daily quests on startup
+* Pulls objectives from active modules
+* Automatically resets each calendar day
+* Allows up to 2 rerolls per day
+* Tracks progress via custom global events
+
+### Event Integration
+
+```javascript
+quiz-correct-answer
+leitner-card-reviewed
+icelandic-session-completed
+athlete-routine-completed
+```
+
+### Completion Rewards
+
+When all three quests are completed:
+
+* Gold & crimson particle explosion
+* Web Audio API reward chord
+* XP rewards
+* Achievement progression
+
+---
+
+# 🇮🇸 Module 2 — Icelandic Language Trainer
+
+A three-stage acquisition model inspired by comprehensible input and active recall.
+
+---
+
+## Phase 1 — Input
+
+Users receive short Icelandic dialogues generated by Gemini.
+
+Features:
+
+* Clickable annotations
+* Vocabulary explanations
+* Delayed translation reveal
+* 30-second immersion timer
+
+---
+
+## Phase 2 — Consolidation
+
+Leitner spaced repetition system.
+
+Features:
+
+* Sentence-based review cards
+* Local persistence
+* Priority surfacing of due cards
+* Automatic box progression
+
+---
+
+## Phase 3 — Output
+
+Active language production.
+
+Users must create an original sentence using a target word.
+
+Gemini provides:
+
+* Grammar validation
+* Vocabulary feedback
+* Correction annotations
+
+Visual indicators:
+
+* ~~Red strikethrough~~ = mistake
+* Gold highlight = suggested correction
+
+---
+
+# 🏃 Module 3 — Desk Athlete
+
+Designed for users spending extended periods at a computer.
+
+### Exercise Database
+
+Contains:
+
+* 15 seated stretches
+* Mobility exercises
+* Neck, shoulder, wrist, and posture routines
+
+### Features
+
+* Auto-generated micro-routines
+* 4–5 exercises per session
+* Countdown timers
+* Pause and skip controls
+* Audio transition chimes
+* Exercise codex for individual practice
+
+### Rewards
+
+Routine completion contributes to:
+
+* Daily quests
+* XP progression
+* Achievement tracking
+
+---
+
+# 🦠 Module 4 — Parasitology Quiz
+
+Advanced medical education module built around clinical reasoning.
+
+### Difficulty Levels
+
+* Resident
+* Fellow
+* Attending
+
+### Features
+
+* Advanced-level clinical vignettes
+* Differential diagnosis practice
+* Background preloading
+* Instant case transitions
+
+### Rewards
+
+Correct answers unlock collectible parasite entries.
+
+---
+
+# 📖 Bestiary Gallery
+
+The collectible archive of discovered parasites.
+
+### Card Design
+
+Each card contains:
+
+* SVG silhouette artwork
+* Classification
+* Transmission methods
+* Host information
+* Vector information
+* Fatality ratings
+
+### Filters
+
+* All
+* Common
+* Rare
+* Legendary
+
+### Offline Support
+
+Includes 20 fallback clinical cases for uninterrupted use.
+
+---
+
+# 🏆 Gamification System
+
+The Void Killer transforms learning into a long-term RPG progression experience.
+
+---
+
+## Level System
+
+Maximum Level:
+
+```text
+1 → 50
+```
+
+### Titles
+
+| Level | Title                       |
+| ----- | --------------------------- |
+| 1     | The Unknowing Vessel        |
+| 5     | Seeker of Rot               |
+| 10    | Branded by Infection        |
+| 20    | Herald of the Crawling Dark |
+| 35    | Elden Pathogen              |
+| 50    | Godhost                     |
+
+Level-ups trigger:
+
+* Fullscreen gold banner
+* Audio chimes
+* Visual reward effects
+
+---
+
+## Streak System
+
+The streak mechanic uses a forgiving:
+
+```text
+36-Hour Grace Period
+```
+
+Features:
+
+* Five animated Nordic rune stones
+* Golden pulse effects
+* Reduced streak anxiety
+* ADHD-friendly consistency tracking
+
+---
+
+## Achievements
+
+Unlockable milestones include:
+
+* Diagnosed 10 Cases
+* Survived a 7-Day Streak
+* 100 Icelandic Words Mastered
+* Full Bestiary Unlocked
+* Godhost Ascended
+
+---
+
+# 💾 Persistence
+
+All application state is stored locally via:
+
+```javascript
+localStorage
+```
+
+Stored data includes:
+
+* User settings
+* XP
+* Levels
+* Achievements
+* Streaks
+* Leitner boxes
+* Bestiary unlocks
+* Quest progress
+* API configuration
+
+No backend services are required.
+
+---
+
+# 🚀 Deployment
+
+The application can be hosted on:
+
+* GitHub Pages
+* Netlify
+* Vercel
+* Cloudflare Pages
+* Any static web server
+
+Simply upload the project files and serve them as static assets.
+
+---
+
+# 📜 License
+
+This project is intended as a personal educational and productivity tool.
+
+Inspired by dark fantasy game aesthetics while maintaining an original implementation and educational purpose.
+
+---
+
+## "Knowledge is the flame. Discipline is the blade. Become the Void Killer."

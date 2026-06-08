@@ -1,0 +1,604 @@
+/* The Void Killer - Dark Fantasy CSS Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;600&display=swap');
+
+:root {
+  /* Dark Mode Palette */
+  --bg-color: #0e0b08;
+  --surface-color: #1a1510;
+  --surface-inner: #1e1a14;
+  --accent-gold: #c9a84c;
+  --accent-gold-glow: rgba(201, 168, 76, 0.4);
+  --accent-red: #8b1a1a;
+  --accent-red-glow: rgba(139, 26, 26, 0.4);
+  --text-cream: #e8dcc8;
+  --text-muted: #a39580;
+  --border-gold: #c9a84c;
+  --border-gold-dim: #705b29;
+  --noise-opacity: 0.04;
+  
+  /* Layout sizes */
+  --border-double-width: 4px;
+}
+
+/* Light / Parchment Mode Toggle Override */
+body.light-mode {
+  --bg-color: #e5dac6;
+  --surface-color: #f3ebd9;
+  --surface-inner: #ece2ce;
+  --accent-gold: #8f6f21;
+  --accent-gold-glow: rgba(143, 111, 33, 0.2);
+  --accent-red: #a12b2b;
+  --accent-red-glow: rgba(161, 43, 43, 0.2);
+  --text-cream: #28211a;
+  --text-muted: #5e5040;
+  --border-gold: #8f6f21;
+  --border-gold-dim: #b3954c;
+  --noise-opacity: 0.08;
+}
+
+/* Global Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-cream);
+  font-family: 'EB Garamond', serif;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  /* SVG Noise Overlay */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+body.light-mode {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+/* Typography headers */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--accent-gold);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  margin-bottom: 0.5em;
+}
+
+/* Small UI typography */
+small, .ui-label, button, input, select, textarea {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+  border-left: 1px solid var(--border-gold-dim);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-color);
+  border: 1px solid var(--border-gold);
+  border-radius: 1px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-gold);
+}
+
+/* Main Container Frame */
+#app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  gap: 1.5rem;
+}
+
+/* Header & Status Bar */
+header {
+  background-color: var(--surface-color);
+  border: double var(--border-double-width) var(--border-gold);
+  padding: 1.25rem 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+header::before {
+  content: "";
+  position: absolute;
+  top: 1px; left: 1px; right: 1px; bottom: 1px;
+  border: 1px solid var(--border-gold-dim);
+  pointer-events: none;
+}
+
+.brand-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 2rem;
+  margin: 0;
+  color: var(--accent-gold);
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.2em;
+}
+
+/* Elden Ring-style Stamina Bar for XP */
+.xp-hud-container {
+  flex-grow: 1;
+  max-width: 500px;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.xp-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.char-title {
+  color: var(--text-cream);
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+}
+
+.xp-text {
+  font-size: 0.75rem;
+  color: var(--accent-gold);
+}
+
+.xp-bar-outer {
+  height: 10px;
+  background-color: #2b231b;
+  border: 1px solid var(--border-gold-dim);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.xp-bar-inner {
+  height: 100%;
+  background-color: var(--accent-gold);
+  width: 0%;
+  transition: width 0.5s cubic-bezier(0.1, 0.8, 0.2, 1);
+  box-shadow: 0 0 10px var(--accent-gold-glow);
+}
+
+/* Streak Rune Stones */
+.streak-hud-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.streak-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.rune-stones-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.rune-stone {
+  width: 20px;
+  height: 24px;
+  fill: #2c251e;
+  stroke: var(--border-gold-dim);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+  transition: all 0.3s ease;
+}
+
+.rune-stone.active {
+  fill: var(--accent-gold);
+  stroke: var(--text-cream);
+  filter: drop-shadow(0 0 8px var(--accent-gold-glow));
+  animation: runePulse 2.5s infinite alternate;
+}
+
+@keyframes runePulse {
+  0% { filter: drop-shadow(0 0 3px var(--accent-gold-glow)); }
+  100% { filter: drop-shadow(0 0 10px var(--accent-gold)); }
+}
+
+/* Header Utilities */
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Core Layout Shell */
+.main-shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  flex-grow: 1;
+}
+
+/* Left Navigation Menu (BG3 styled choose your dialogue style) */
+.nav-sidebar {
+  background-color: var(--surface-color);
+  border: double var(--border-double-width) var(--border-gold);
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+.nav-sidebar::before {
+  content: "";
+  position: absolute;
+  top: 1px; left: 1px; right: 1px; bottom: 1px;
+  border: 1px solid var(--border-gold-dim);
+  pointer-events: none;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  list-style: none;
+}
+
+/* BG3 Dialogue Style Nav Item */
+.nav-item-btn {
+  width: 100%;
+  text-align: left;
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-radius: 2px;
+}
+
+.nav-item-btn .item-num {
+  color: var(--accent-red);
+  margin-right: 0.4rem;
+  transition: color 0.25s ease;
+}
+
+.nav-item-btn:hover {
+  background-color: rgba(201, 168, 76, 0.05);
+  color: var(--text-cream);
+  border: 1px solid var(--accent-gold);
+  box-shadow: inset 0 0 8px rgba(201, 168, 76, 0.15);
+}
+
+.nav-item-btn:hover .item-num {
+  color: var(--accent-gold);
+}
+
+.nav-item-btn.active {
+  background-color: rgba(201, 168, 76, 0.08);
+  border: 1px solid var(--accent-gold);
+  color: var(--accent-gold);
+  box-shadow: 0 0 10px rgba(201, 168, 76, 0.1);
+}
+
+.nav-item-btn.active .item-num {
+  color: var(--accent-gold);
+}
+
+/* Main Content Panel */
+.content-panel {
+  background-color: var(--surface-color);
+  border: double var(--border-double-width) var(--border-gold);
+  min-height: 500px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-panel::before {
+  content: "";
+  position: absolute;
+  top: 1px; left: 1px; right: 1px; bottom: 1px;
+  border: 1px solid var(--border-gold-dim);
+  pointer-events: none;
+}
+
+.panel-header {
+  border-bottom: 1px solid var(--border-gold-dim);
+  padding: 1.25rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.panel-body {
+  padding: 2rem;
+  flex-grow: 1;
+  position: relative;
+}
+
+/* ADHD Focus "Just One Thing" Mode */
+body.focus-mode header,
+body.focus-mode .nav-sidebar,
+body.focus-mode .panel-header,
+body.focus-mode footer {
+  display: none !important;
+}
+
+body.focus-mode .main-shell {
+  grid-template-columns: 1fr;
+  max-width: 900px;
+  margin: 2rem auto;
+}
+
+body.focus-mode #app-container {
+  padding: 0;
+}
+
+body.focus-mode .content-panel {
+  min-height: 80vh;
+}
+
+/* Carved Stone Tablets Buttons */
+.btn-stone {
+  background-color: var(--surface-inner);
+  color: var(--text-cream);
+  border: 1px solid var(--border-gold-dim);
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.btn-stone::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(rgba(255,255,255,0.05), transparent);
+  pointer-events: none;
+}
+
+.btn-stone:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  box-shadow: 0 0 10px var(--accent-gold-glow);
+  background-color: #241d16;
+}
+
+.btn-stone:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+.btn-stone.danger {
+  border-color: var(--accent-red);
+  color: var(--text-cream);
+}
+.btn-stone.danger:hover {
+  border-color: #ff3333;
+  color: #ffcccc;
+  box-shadow: 0 0 10px var(--accent-red-glow);
+  background-color: #2b1212;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  background-color: var(--surface-color);
+  border: double var(--border-double-width) var(--border-gold);
+  padding: 2.5rem;
+  max-width: 550px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.modal-overlay.active .modal-content {
+  transform: scale(1);
+}
+
+.modal-content::before {
+  content: "";
+  position: absolute;
+  top: 1px; left: 1px; right: 1px; bottom: 1px;
+  border: 1px solid var(--border-gold-dim);
+  pointer-events: none;
+}
+
+/* Input Fields - Grimoire Style */
+.input-group {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-grimoire {
+  background-color: var(--surface-inner);
+  border: 1px solid var(--border-gold-dim);
+  color: var(--text-cream);
+  padding: 0.75rem 1rem;
+  border-radius: 2px;
+  width: 100%;
+  outline: none;
+  font-family: 'EB Garamond', serif;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.input-grimoire:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 8px var(--accent-gold-glow);
+}
+
+/* Parchment vignette container */
+.parchment-scroll {
+  background-color: #f2e6cf;
+  color: #2b2118;
+  border: 1px solid #c3b091;
+  border-radius: 4px;
+  padding: 1.5rem;
+  box-shadow: inset 0 0 20px rgba(139,114,82,0.3), 0 4px 10px rgba(0,0,0,0.15);
+  position: relative;
+  font-size: 1.25rem;
+  line-height: 1.7;
+}
+
+.light-mode .parchment-scroll {
+  background-color: #faf5eb;
+  border-color: #d8cbb5;
+}
+
+.wax-seal {
+  position: absolute;
+  bottom: -15px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  fill: var(--accent-red);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.wax-seal:hover {
+  transform: scale(1.08) rotate(5deg);
+}
+
+/* Focus Mode Candle Toggle button styling */
+.btn-focus-toggle {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 900;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: var(--surface-inner);
+  border: 2px solid var(--border-gold);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 0 10px var(--accent-gold-glow);
+  transition: all 0.3s ease;
+}
+
+.btn-focus-toggle:hover {
+  transform: scale(1.1);
+  border-color: var(--text-cream);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6), 0 0 15px var(--accent-gold);
+}
+
+.btn-focus-toggle svg {
+  width: 28px;
+  height: 28px;
+  fill: var(--accent-gold);
+  transition: fill 0.3s ease;
+}
+
+.btn-focus-toggle:hover svg {
+  fill: var(--text-cream);
+}
+
+body.focus-mode .btn-focus-toggle {
+  border-color: var(--accent-red);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5), 0 0 10px var(--accent-red-glow);
+}
+
+body.focus-mode .btn-focus-toggle svg {
+  fill: var(--accent-red);
+}
+
+/* Offline Banner styling */
+#offline-banner {
+  background-color: var(--accent-red);
+  color: #ffcccc;
+  text-align: center;
+  padding: 0.3rem 1rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid #ff3333;
+  display: none;
+  animation: flicker 4s infinite;
+}
+
+@keyframes flicker {
+  0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 0.99; }
+  20%, 21.999%, 63%, 63.999%, 65%, 69.999% { opacity: 0.4; }
+}
+
+/* Responsive Rules */
+@media(max-width: 850px) {
+  .main-shell {
+    grid-template-columns: 1fr;
+  }
+  header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .xp-hud-container {
+    max-width: 100%;
+  }
+}
