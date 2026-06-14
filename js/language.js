@@ -736,6 +736,9 @@ function renderOutputPhase() {
       if (correction.is_correct) {
         bonusXp = 40;
         addXp(40); // 40 bonus XP
+      } else if (correction.is_partially_correct) {
+        bonusXp = 20;
+        addXp(20); // 20 bonus XP (partially correct)
       } else {
         sessionHadMistakes = true;
       }
@@ -750,44 +753,122 @@ function renderOutputPhase() {
       addXp(25); // completed session
       renderOutputFeedback(userSentence, chosenWordObj.icelandic, {
         is_correct: true,
+        is_partially_correct: false,
         corrected_sentence: userSentence,
-        explanation_german: "Offline Mode: Grammatikalische Überprüfung übersprungen. Du hast 25 Standard-XP erhalten!"
+        explanation_german: "Offline Mode: Grammatikalische Überprüfung übersprungen. Du hast 25 Standard-XP erhalten!",
+        error_reason: "",
+        correct_example: ""
       }, 0);
     }
   });
 }
 
 async function verifyOutputSentence(sentence, targetWord) {
+  const normSentence = normalizeIcelandic(sentence);
+  const normTarget = normalizeIcelandic(targetWord);
+  
+  // Check if the user sentence is at least 3 words
+  const words = sentence.split(/\s+/).filter(w => w.length > 0);
+  const hasTargetWord = normSentence.includes(normTarget);
+  
+  // Check for Icelandic identifiers: (ð, þ, æ, ö or words ég, og, er, í, á, að)
+  const normalizedLower = sentence.toLowerCase();
+  const hasIcelandicChars = /[ðþæö]/.test(normalizedLower);
+  const commonIcelandicWords = ["ég", "og", "er", "í", "á", "að"];
+  const hasIcelandicWords = words.some(w => commonIcelandicWords.includes(w.toLowerCase()));
+  
+  const isLanguageLegit = hasIcelandicChars || hasIcelandicWords;
+
   if (isOfflineMode()) {
-    const normSentence = normalizeIcelandic(sentence);
-    const normTarget = normalizeIcelandic(targetWord);
-    
-    // Check if the user sentence is at least 3 words and contains the target word
-    const words = sentence.split(/\s+/).filter(w => w.length > 0);
-    const hasTargetWord = normSentence.includes(normTarget);
-    
-    if (words.length >= 3 && hasTargetWord) {
+    if (words.length >= 3 && hasTargetWord && isLanguageLegit) {
       return {
         is_correct: true,
+        is_partially_correct: false,
         corrected_sentence: sentence,
-        explanation_german: `Offline-Modus aktiv. Dein Satz enthält das Wort '${targetWord}' und erfüllt die Längenbedingungen (+40 XP Bonus gewährt).`
+        explanation_german: `Offline-Modus aktiv. Dein Satz enthält das Wort '${targetWord}' und wurde lokal verifiziert (+40 XP Bonus gewährt).`,
+        error_reason: "",
+        correct_example: `${targetWord} er gott orð.`
       };
     } else {
-      let errorMsg = "Dein Satz ist zu kurz. Bitte schreibe mindestens 3 Wörter.";
-      if (!hasTargetWord) {
-        errorMsg = `Dein Satz enthält das geforderte Wort '${targetWord}' nicht. Bitte verwende es (Akzente/Umlaute sind optional).`;
+      let errorReason = "";
+      let explanation = "";
+      if (words.length < 3) {
+        errorReason = "Der Satz ist zu kurz.";
+        explanation = "Bitte schreibe mindestens 3 Wörter.";
+      } else if (!hasTargetWord) {
+        errorReason = `Fehlendes Zielwort.`;
+        explanation = `Dein Satz enthält das geforderte Wort '${targetWord}' nicht.`;
+      } else if (!isLanguageLegit) {
+        errorReason = "Ungültige Sprache.";
+        explanation = "Dies scheint kein gültiger isländischer Satz zu sein. Bitte benutze isländische Sonderzeichen (ð, þ, æ, ö) oder gängige Wörter wie 'ég', 'og', 'er', 'í', 'á', 'að'.";
       }
+      
       return {
         is_correct: false,
-        corrected_sentence: sentence,
-        explanation_german: `${errorMsg} (Offline-Überprüfung)`
+        is_partially_correct: false,
+        corrected_sentence: targetWord + " ... (Beispiel)",
+        explanation_german: explanation,
+        error_reason: errorReason,
+        correct_example: `Ég nota ${targetWord} á hverjum degi.`
       };
     }
   }
   
-  const prompt = `The user is learning Icelandic and wrote this sentence: '${sentence}'. They were trying to use the word '${targetWord}'. Respond ONLY in valid JSON: { is_correct: boolean, corrected_sentence: string, explanation_german: string (max 2 sentences, friendly tone, explain what was wrong or confirm what was right) }.`;
+  const prompt = `The user is learning Icelandic and wrote this sentence: '${sentence}'. They were trying to use the word '${targetWord}'. Respond ONLY in valid JSON: {
+    "is_correct": boolean,
+    "is_partially_correct": boolean,
+    "corrected_sentence": string,
+    "explanation_german": string,
+    "error_reason": string,
+    "correct_example": string
+  }. Explanation should be max 2 sentences in German, explaining what was wrong/right. Make sure that if the sentence is grammatically incorrect, is_correct is false. If it has minor spelling mistakes, is_partially_correct can be true.`;
   
-  return await callGeminiApi(prompt);
+  try {
+    const res = await callGeminiApi(prompt);
+    return {
+      is_correct: res.is_correct ?? false,
+      is_partially_correct: res.is_partially_correct ?? false,
+      corrected_sentence: res.corrected_sentence || sentence,
+      explanation_german: res.explanation_german || "Erfolgreich überprüft.",
+      error_reason: res.error_reason || "",
+      correct_example: res.correct_example || ""
+    };
+  } catch (e) {
+    console.warn("Gemini validation failed, falling back to local verification:", e);
+    
+    if (words.length >= 3 && hasTargetWord && isLanguageLegit) {
+      return {
+        is_correct: true,
+        is_partially_correct: false,
+        corrected_sentence: sentence,
+        explanation_german: `API-Verbindung fehlgeschlagen. Lokale Verifizierung erfolgreich (+40 XP Bonus gewährt).`,
+        error_reason: "",
+        correct_example: `${targetWord} er gott orð.`
+      };
+    } else {
+      let errorReason = "";
+      let explanation = "";
+      if (words.length < 3) {
+        errorReason = "Der Satz ist zu kurz.";
+        explanation = "Bitte schreibe mindestens 3 Wörter.";
+      } else if (!hasTargetWord) {
+        errorReason = `Fehlendes Zielwort.`;
+        explanation = `Dein Satz enthält das geforderte Wort '${targetWord}' nicht.`;
+      } else if (!isLanguageLegit) {
+        errorReason = "Ungültige Sprache.";
+        explanation = "Dies scheint kein gültiger isländischer Satz zu sein. Bitte benutze isländische Sonderzeichen (ð, þ, æ, ö) oder gängige Wörter wie 'ég', 'og', 'er', 'í', 'á', 'að'.";
+      }
+      
+      return {
+        is_correct: false,
+        is_partially_correct: false,
+        corrected_sentence: targetWord + " ... (Beispiel)",
+        explanation_german: explanation,
+        error_reason: errorReason,
+        correct_example: `Ég nota ${targetWord} á hverjum degi.`
+      };
+    }
+  }
 }
 
 function renderOutputFeedback(sentence, targetWord, correction, bonusXp) {
@@ -798,11 +879,30 @@ function renderOutputFeedback(sentence, targetWord, correction, bonusXp) {
   textarea.disabled = true;
   feedbackArea.style.display = "block";
   
-  // Render word comparison diff visually
+  let headerColor = "var(--accent-gold)";
+  let headerText = "✦ CORRECTION RENDERED ✦";
   let diffHtml = "";
+  
   if (correction.is_correct) {
+    headerColor = "#4c914c";
+    headerText = "✦ SYNTAX CORRECT (+40 XP Bonus) ✦";
     diffHtml = `<span class="diff-correct">${correction.corrected_sentence}</span>`;
+  } else if (correction.is_partially_correct) {
+    headerColor = "#c9a84c";
+    headerText = "✦ SUGGESTIONS GENERATED (+20 XP Bonus) ✦";
+    diffHtml = `
+      <div style="margin-bottom: 0.5rem;">
+        <span class="ui-label" style="font-size: 0.65rem; color: #c9a84c;">Your Sentence:</span>
+        <p style="color: var(--text-cream);">${sentence}</p>
+      </div>
+      <div>
+        <span class="ui-label" style="font-size: 0.65rem; color: var(--accent-gold);">Suggested Sentence:</span>
+        <p class="diff-correct">${correction.corrected_sentence}</p>
+      </div>
+    `;
   } else {
+    headerColor = "var(--accent-red)";
+    headerText = "✦ SYNTAX INCORRECT ✦";
     diffHtml = `
       <div style="margin-bottom: 0.5rem;">
         <span class="ui-label" style="font-size: 0.65rem; color: var(--accent-red);">Your Sentence:</span>
@@ -812,13 +912,26 @@ function renderOutputFeedback(sentence, targetWord, correction, bonusXp) {
         <span class="ui-label" style="font-size: 0.65rem; color: var(--accent-gold);">Corrected Sentence:</span>
         <p class="diff-correct">${correction.corrected_sentence}</p>
       </div>
+      ${correction.error_reason ? `
+      <div style="margin-top: 0.5rem; border-left: 2px solid var(--accent-red); padding-left: 0.5rem;">
+        <span class="ui-label" style="font-size: 0.65rem; color: var(--accent-red); display:block;">Error Reason:</span>
+        <span style="font-size: 0.9rem; color: var(--text-muted);">${correction.error_reason}</span>
+      </div>
+      ` : ''}
     `;
   }
   
+  const exampleHtml = correction.correct_example ? `
+    <div style="margin-top: 1rem; border-top: 1px solid var(--border-gold-dim); padding-top: 0.75rem;">
+      <span class="ui-label" style="font-size: 0.65rem; color: var(--accent-gold); display:block; margin-bottom: 0.25rem;">Reference Example:</span>
+      <p style="font-family: 'EB Garamond'; font-size: 1.15rem; font-style: italic; color: var(--accent-gold); margin: 0;">${correction.correct_example}</p>
+    </div>
+  ` : '';
+  
   feedbackArea.innerHTML = `
-    <div class="explanation-box" style="margin-top: 0; border-color: ${correction.is_correct ? '#4c914c' : 'var(--accent-gold)'};">
-      <h4 style="font-family: 'Cinzel'; color: ${correction.is_correct ? '#4c914c' : 'var(--accent-gold)'}; margin-bottom: 0.75rem;">
-        ${correction.is_correct ? `✦ SYNTAX CORRECT (+40 XP Bonus) ✦` : "✦ CORRECTION RENDERED ✦"}
+    <div class="explanation-box" style="margin-top: 0; border-color: ${headerColor};">
+      <h4 style="font-family: 'Cinzel'; color: ${headerColor}; margin-bottom: 0.75rem;">
+        ${headerText}
       </h4>
       <div class="diff-container" style="margin-bottom: 1rem;">
         ${diffHtml}
@@ -826,6 +939,7 @@ function renderOutputFeedback(sentence, targetWord, correction, bonusXp) {
       <p style="font-family: 'EB Garamond'; font-size: 1.1rem; color: var(--text-cream); margin: 0;">
         ${correction.explanation_german}
       </p>
+      ${exampleHtml}
     </div>
   `;
   

@@ -7,12 +7,10 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
   <!-- Offline Mode / API Key Warning Indicator -->
   <div id="offline-banner">
     ✦ OFFLINE MODE ACTIVE — FALLBACKS LOADED ✦
   </div>
-
   <div id="app-container">
     
     <!-- HEADER / HERO HUB -->
@@ -21,7 +19,6 @@
         <h1 class="brand-title">THE VOID KILLER</h1>
         <span class="brand-subtitle">ANTI-BOREDOM GRIMOIRE</span>
       </div>
-
       <!-- XP Bar -->
       <div class="xp-hud-container">
         <div class="xp-label-row">
@@ -32,7 +29,6 @@
           <div class="xp-bar-inner" id="player-xp-bar"></div>
         </div>
       </div>
-
       <!-- Streak Rune Stones Row -->
       <div class="streak-hud-container">
         <span class="streak-label">Daily Streak:</span>
@@ -40,7 +36,6 @@
           <!-- 5 SVG Rune Stones generated programmatically -->
         </div>
       </div>
-
       <!-- Settings cog and light/dark toggle -->
       <div class="header-actions">
         <button id="toggle-light-mode" class="btn-stone" title="Toggle Light/Parchment Mode">
@@ -66,7 +61,6 @@
         </button>
       </div>
     </header>
-
     <!-- CORE SHELL GRID -->
     <div class="main-shell">
       
@@ -105,7 +99,6 @@
           </li>
         </ul>
       </aside>
-
       <!-- Main Display Content Frame -->
       <main class="content-panel">
         <div class="panel-header">
@@ -116,30 +109,71 @@
           <!-- Views will inject here dynamically -->
         </div>
       </main>
-
     </div>
   </div>
-
-  <!-- API KEY SETUP MODAL -->
+  <!-- SETTINGS & GRIMOIRE BINDING MODAL -->
   <div class="modal-overlay" id="modal-api-setup">
-    <div class="modal-content">
-      <h2>Gemini API Setup</h2>
+    <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+      <h2>Grimoire Settings</h2>
       <p style="margin: 0.5rem 0 1.5rem 0; font-family: 'EB Garamond'; color: var(--text-muted);">
-        Enter your Gemini API key to activate advanced parasitology cases and dynamic Icelandic mini-dialogues. Keys are stored safely in local browser storage.
+        Configure your connection runes, sounds, and save states here.
       </p>
-      
-      <div class="input-group">
+      <!-- Section 1: Gemini API -->
+      <h4 style="font-family: 'Cinzel'; border-bottom: 1px solid var(--border-gold-dim); padding-bottom: 0.25rem;">Gemini API (AI Features)</h4>
+      <div class="input-group" style="margin-bottom: 1rem;">
         <label for="api-key-input" class="ui-label">API KEY</label>
         <input type="password" id="api-key-input" class="input-grimoire" placeholder="AIzaSy...">
       </div>
-
-      <div style="display:flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+      <!-- Section 2: Sound Toggles -->
+      <h4 style="font-family: 'Cinzel'; border-bottom: 1px solid var(--border-gold-dim); padding-bottom: 0.25rem; margin-top: 1.5rem;">Grimoire Soundscapes</h4>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+        <label class="ui-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; text-transform: none;">
+          <input type="checkbox" id="sound-master-toggle" checked style="accent-color: var(--accent-gold);">
+          <span>Master Sound (Enable all audio output)</span>
+        </label>
+        <label class="ui-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; text-transform: none;">
+          <input type="checkbox" id="sound-sfx-toggle" checked style="accent-color: var(--accent-gold);">
+          <span>Sound Effects (Level-up notifications, chimes, stretch timers)</span>
+        </label>
+        <label class="ui-label" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; text-transform: none;">
+          <input type="checkbox" id="sound-ambience-toggle" style="accent-color: var(--accent-gold);">
+          <span>Background Ambience (Programmatic dark ambient drone)</span>
+        </label>
+      </div>
+      <!-- Section 3: Sync & Sharing -->
+      <h4 style="font-family: 'Cinzel'; border-bottom: 1px solid var(--border-gold-dim); padding-bottom: 0.25rem; margin-top: 1.5rem;">Sync & Sharing (100% Free)</h4>
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+        <div>
+          <span class="ui-label" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Share Progress via Link (For friends):</span>
+          <button id="btn-copy-sync-link" class="btn-stone" style="font-size: 0.75rem; width: 100%;">Copy Sync Link to Clipboard</button>
+        </div>
+        <div>
+          <span class="ui-label" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Supabase Cloud Sync (Optional):</span>
+          <div class="input-group" style="margin-bottom: 0.5rem;">
+            <input type="text" id="supabase-url-input" class="input-grimoire" placeholder="Supabase Project URL (https://xyz.supabase.co)">
+          </div>
+          <div class="input-group" style="margin-bottom: 0.5rem;">
+            <input type="password" id="supabase-key-input" class="input-grimoire" placeholder="Supabase Anon Key">
+          </div>
+          <div class="input-group" style="margin-bottom: 0.5rem; display: flex; flex-direction: row; gap: 0.5rem; align-items: center;">
+            <input type="text" id="supabase-uuid-input" class="input-grimoire" style="font-family: monospace; font-size: 0.85rem;" placeholder="User Sync ID (Generiert)" readonly>
+            <button id="btn-copy-sync-id" class="btn-stone" style="padding: 0.5rem 0.75rem;">Copy ID</button>
+          </div>
+        </div>
+        <div>
+          <span class="ui-label" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Manual Import / Export State (Raw JSON):</span>
+          <textarea id="import-export-textarea" class="input-grimoire" rows="3" style="font-family: monospace; font-size: 0.8rem; resize: vertical;" placeholder="Paste JSON here to import, or copy this text to backup..."></textarea>
+          <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.4rem;">
+            <button id="btn-import-state" class="btn-stone" style="font-size: 0.7rem; padding: 0.3rem 0.6rem;">Import State</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--border-gold-dim); padding-top: 1.25rem;">
         <button id="btn-api-offline" class="btn-stone danger">Enter Offline Mode</button>
-        <button id="btn-api-save" class="btn-stone">Save Key & Bind Rune</button>
+        <button id="btn-api-save" class="btn-stone">Save Settings & Bind Rune</button>
       </div>
     </div>
   </div>
-
   <!-- FLOAT FOCUS BUTTON (Candle style) -->
   <button class="btn-focus-toggle" id="focus-mode-toggle" title="Just One Thing Mode">
     <!-- SVG Candle Icon -->
@@ -147,7 +181,8 @@
       <path d="M12,2A1,1 0 0,0 11,3V6H13V3A1,1 0 0,0 12,2M12,7C9.24,7 7,9.24 7,12V21A1,1 0 0,0 8,22H16A1,1 0 0,0 17,21V12C17,9.24 14.76,7 12,7M12,9C13.66,9 15,10.34 15,12V20H9V12C9,10.34 10.34,9 12,9M12,4.5C12.28,4.5 12.5,4.72 12.5,5C12.5,5.28 12.28,5.5 12,5.5C11.72,5.5 11.5,5.28 11.5,5C11.5,4.72 11.72,4.5 12,4.5Z" />
     </svg>
   </button>
-
+  <!-- Supabase CDN Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- ES6 App Modules Entry -->
   <script type="module" src="js/app.js"></script>
 </body>

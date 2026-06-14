@@ -1,7 +1,7 @@
 // The Void Killer - Desk Athlete Module
 
 import { EXERCISES } from './exercises.js';
-import { addXp } from './gamification.js';
+import { addXp, playerState, savePlayerState } from './gamification.js';
 
 let routineQueue = [];
 let activeExerciseIdx = 0;
@@ -104,6 +104,25 @@ function injectAthleteStyles() {
   document.head.appendChild(style);
 }
 
+function saveAthleteSession() {
+  playerState.athleteSessionState = {
+    active: routineQueue.length > 0,
+    routineQueueIds: routineQueue.map(e => e.id),
+    activeExerciseIdx: activeExerciseIdx,
+    timeRemaining: timeRemaining,
+    isPaused: isPaused,
+    isStarted: athleteInterval !== null && !isPaused,
+    isSingleExercise: isSingleExercise,
+    sessionTotalSeconds: sessionTotalSeconds
+  };
+  savePlayerState();
+}
+
+function clearAthleteSession() {
+  playerState.athleteSessionState = null;
+  savePlayerState();
+}
+
 export function initAthleteView(container) {
   injectAthleteStyles();
   activeContainer = container;
@@ -113,6 +132,26 @@ export function initAthleteView(container) {
   routineQueue = [];
   activeExerciseIdx = 0;
   isPaused = false;
+  
+  // Check for restored state
+  if (playerState.athleteSessionState && playerState.athleteSessionState.active) {
+    const state = playerState.athleteSessionState;
+    routineQueue = state.routineQueueIds.map(id => EXERCISES.find(e => e.id === id)).filter(Boolean);
+    activeExerciseIdx = state.activeExerciseIdx;
+    timeRemaining = state.timeRemaining;
+    isPaused = state.isPaused;
+    isSingleExercise = state.isSingleExercise;
+    sessionTotalSeconds = state.sessionTotalSeconds;
+    
+    const ex = routineQueue[activeExerciseIdx];
+    if (ex) {
+      renderActivePlayer(ex, state.isStarted);
+      if (state.isStarted) {
+        startTimerLoop();
+      }
+      return;
+    }
+  }
   
   renderSelectionView();
 }
@@ -165,11 +204,13 @@ function loadExercise(idx) {
   timeRemaining = ex.duration;
   isPaused = false;
   
-  renderActivePlayer(ex);
-  startTimerLoop();
+  saveAthleteSession();
+  renderActivePlayer(ex, false); // start as not started yet
 }
 
-function renderActivePlayer(ex) {
+function renderActivePlayer(ex, isStarted = false) {
+  currentMode = "playing";
+  
   activeContainer.innerHTML = `
     <div class="athlete-layout" style="text-align: center;">
       <div style="display: flex; justify-content: space-between; align-items: baseline;">
@@ -192,8 +233,13 @@ function renderActivePlayer(ex) {
         ${ex.description}
       </p>
       
-      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-        <button class="btn-stone" id="btn-player-pause">Pause</button>
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;" id="athlete-controls-row">
+        ${!isStarted ? `
+          <button class="btn-stone" id="btn-player-start" style="border-color: var(--accent-gold); box-shadow: 0 0 8px var(--accent-gold-glow);">Start Exercise</button>
+        ` : `
+          <button class="btn-stone" id="btn-player-pause">${isPaused ? 'Resume' : 'Pause'}</button>
+          <button class="btn-stone" id="btn-player-restart">Restart</button>
+        `}
         ${!isSingleExercise ? `
           <button class="btn-stone" id="btn-player-skip">Skip</button>
         ` : ''}
@@ -202,7 +248,24 @@ function renderActivePlayer(ex) {
     </div>
   `;
   
-  document.getElementById("btn-player-pause").addEventListener("click", togglePause);
+  if (!isStarted) {
+    document.getElementById("btn-player-start").addEventListener("click", () => {
+      startTimerLoop();
+      renderActivePlayer(ex, true);
+    });
+  } else {
+    document.getElementById("btn-player-pause").addEventListener("click", togglePause);
+    document.getElementById("btn-player-restart").addEventListener("click", () => {
+      clearInterval(athleteInterval);
+      timeRemaining = ex.duration;
+      isPaused = false;
+      document.getElementById("timer-number").textContent = timeRemaining;
+      saveAthleteSession();
+      startTimerLoop();
+      renderActivePlayer(ex, true);
+    });
+  }
+  
   if (!isSingleExercise) {
     document.getElementById("btn-player-skip").addEventListener("click", skipExercise);
   }
@@ -211,6 +274,8 @@ function renderActivePlayer(ex) {
 
 function startTimerLoop() {
   clearInterval(athleteInterval);
+  saveAthleteSession();
+  
   athleteInterval = setInterval(() => {
     if (isPaused) return;
     
@@ -219,6 +284,8 @@ function startTimerLoop() {
     // Update number
     const numEl = document.getElementById("timer-number");
     if (numEl) numEl.textContent = timeRemaining;
+    
+    saveAthleteSession();
     
     // Play subtle tick on last 3 seconds
     if (timeRemaining > 0 && timeRemaining <= 3) {
@@ -244,6 +311,7 @@ function togglePause() {
   if (btn) {
     btn.textContent = isPaused ? "Resume" : "Pause";
   }
+  saveAthleteSession();
 }
 
 function skipExercise() {
@@ -255,6 +323,7 @@ function skipExercise() {
 function quitRoutine() {
   if (confirm("Are you sure you want to stop your routine? Progress will be lost.")) {
     clearInterval(athleteInterval);
+    clearAthleteSession();
     renderSelectionView();
   }
 }
@@ -263,6 +332,7 @@ function quitRoutine() {
 function triggerTransition() {
   currentMode = "transitioning";
   let transitionTime = 4;
+  clearAthleteSession();
   
   activeContainer.innerHTML = `
     <div class="athlete-layout" style="text-align: center; justify-content: center; min-height: 400px;">
@@ -295,6 +365,7 @@ function triggerTransition() {
 function completeRoutine() {
   currentMode = "complete";
   clearInterval(athleteInterval);
+  clearAthleteSession();
   
   addXp(30); // 30 XP
   
@@ -336,6 +407,7 @@ function completeRoutine() {
 function completeSingleExercise() {
   currentMode = "complete";
   clearInterval(athleteInterval);
+  clearAthleteSession();
   
   addXp(10); // 10 XP for single
   

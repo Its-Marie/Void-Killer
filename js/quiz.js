@@ -1,7 +1,7 @@
 // The Void Killer - Parasitology Quiz Engine
 
 import { callGeminiApi, isOfflineMode } from './api.js';
-import { addXp, incrementDiagnosedCount } from './gamification.js';
+import { addXp, incrementDiagnosedCount, playerState, savePlayerState, canPlaySound } from './gamification.js';
 import { PARASITES, FALLBACK_QUESTIONS, renderParasiteCard } from './bestiary.js';
 
 let currentDifficulty = "Resident"; // Resident, Fellow, Attending
@@ -280,6 +280,50 @@ function renderQuestion(q) {
   });
 }
 
+function playAnswerSound(isCorrect) {
+  if (!canPlaySound('sfx')) return;
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    if (isCorrect) {
+      // High pleasant double beep
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now); // C5
+      osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.15, now + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else {
+      // Low buzzer sound
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(120, now); // Low buzz
+      osc.frequency.linearRampToValueAtTime(80, now + 0.2);
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.12, now + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+      
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(300, now);
+      
+      osc.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+  } catch (e) {
+    console.warn("Could not play answer sound:", e);
+  }
+}
+
 function handleAnswer(selectedIdx, choiceBtns) {
   // Disable all choice buttons
   choiceBtns.forEach(btn => btn.disabled = true);
@@ -297,6 +341,12 @@ function handleAnswer(selectedIdx, choiceBtns) {
   const xpReward = DIFFICULTY_XP[currentDifficulty];
   let cardUnlocked = false;
   let unlockedParasite = null;
+  
+  // Update stats
+  playerState.quizStats.roundsPlayed++;
+  
+  // Play feedback sound
+  playAnswerSound(isCorrect);
   
   if (isCorrect) {
     addXp(xpReward);
@@ -321,6 +371,9 @@ function handleAnswer(selectedIdx, choiceBtns) {
         cardUnlocked = true;
       }
     }
+  } else {
+    playerState.quizStats.incorrectCount++;
+    savePlayerState();
   }
   
   // Reveal explanation and Next button
@@ -416,17 +469,29 @@ async function fetchQuestion(difficulty) {
   }
 }
 
+// SessionaskedQuestions cache to prevent repetition in the current quiz session
+let sessionAskedQuestions = [];
+
 function fetchOfflineQuestion(difficulty) {
-  // Filter fallbacks by approximate difficulty
-  let candidates = FALLBACK_QUESTIONS;
-  if (difficulty === "Resident") {
-    // Return early elements
-    candidates = FALLBACK_QUESTIONS.slice(0, 10);
-  } else {
-    candidates = FALLBACK_QUESTIONS.slice(10);
+  // Filter fallbacks by exact difficulty
+  let candidates = FALLBACK_QUESTIONS.filter(q => q.difficulty === difficulty);
+  if (candidates.length === 0) candidates = FALLBACK_QUESTIONS; // fallback if empty
+  
+  // Filter out already asked questions if possible
+  let freshCandidates = candidates.filter(q => !sessionAskedQuestions.includes(q.id));
+  if (freshCandidates.length === 0) {
+    // Reset session asked questions for this difficulty
+    sessionAskedQuestions = sessionAskedQuestions.filter(id => !candidates.some(c => c.id === id));
+    freshCandidates = candidates;
   }
   
   // Pick random candidate
+  const candidate = freshCandidates[Math.floor(Math.random() * freshCandidates.length)];
+  if (candidate) {
+    sessionAskedQuestions.push(candidate.id);
+    return JSON.parse(JSON.stringify(candidate));
+  }
+  
   const idx = Math.floor(Math.random() * candidates.length);
   return JSON.parse(JSON.stringify(candidates[idx])); // Clone
 }

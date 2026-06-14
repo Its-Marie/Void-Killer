@@ -1,6 +1,6 @@
 // The Void Killer - Main Orchestrator
 
-import { initGamification, playerState, getLevelTitle } from './gamification.js';
+import { initGamification, playerState, getLevelTitle, canPlaySound, savePlayerState, initSupabase, syncToSupabase, pullFromSupabase } from './gamification.js';
 import { getApiKey, isOfflineMode, setApiKey } from './api.js';
 import { initQuestsView } from './quests.js';
 import { initLanguageView } from './language.js';
@@ -26,6 +26,20 @@ const panelTitle = document.getElementById("active-panel-title");
 const panelStatus = document.getElementById("panel-status-label");
 const panelView = document.getElementById("active-panel-view");
 
+// Sound Elements
+const soundMasterToggle = document.getElementById("sound-master-toggle");
+const soundSfxToggle = document.getElementById("sound-sfx-toggle");
+const soundAmbienceToggle = document.getElementById("sound-ambience-toggle");
+
+// Sync Elements
+const supabaseUrlInput = document.getElementById("supabase-url-input");
+const supabaseKeyInput = document.getElementById("supabase-key-input");
+const supabaseUuidInput = document.getElementById("supabase-uuid-input");
+const btnCopySyncId = document.getElementById("btn-copy-sync-id");
+const btnCopySyncLink = document.getElementById("btn-copy-sync-link");
+const importExportTextarea = document.getElementById("import-export-textarea");
+const btnImportState = document.getElementById("btn-import-state");
+
 // Active Tab Router
 let activeTab = "quests";
 
@@ -38,9 +52,18 @@ const TAB_INIT_FUNCTIONS = {
   achievements: { title: "Achievements", status: "Legendary Feats", init: initAchievementsView }
 };
 
+// Web Audio API Ambient Drone Nodes
+let ambientAudioCtx = null;
+let droneOsc1 = null;
+let droneOsc2 = null;
+let droneGain = null;
+let filterNode = null;
+let modulatorOsc = null;
+let modulatorGain = null;
+
 // Initialize Application
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialize Gamification State
+  // Initialize State
   initGamification();
   
   // Setup HUD and UI State
@@ -50,11 +73,14 @@ document.addEventListener("DOMContentLoaded", () => {
   setupRouter();
   setupFocusMode();
   
-  // Show Setup Modal on first load if key is missing
+  // Check Setup Modal on first load
   checkApiKeyStatus();
   
   // Load Default view
   loadView(activeTab);
+
+  // Setup Sound Toggles & Autoplay listeners
+  initAudioAutoPlay();
 });
 
 // Update XP Bar & HUD labels
@@ -89,8 +115,12 @@ function setupRuneStones() {
   streakRow.innerHTML = "";
   const activeStreak = playerState.streak;
   
+  // Map streak count to 5 stones (cycles if > 5)
+  const displayStreak = activeStreak % 6; // e.g. 7 days = 2 active stones, etc. (Or cap at 5)
+  const cappedStreak = Math.min(5, activeStreak);
+  
   for (let i = 0; i < 5; i++) {
-    const isActive = i < activeStreak;
+    const isActive = i < cappedStreak;
     const path = runePaths[i];
     
     // SVG Creation
@@ -120,14 +150,11 @@ function setupRuneStones() {
 function setupRouter() {
   document.querySelectorAll(".nav-item-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
-      // Clean old active state
       document.querySelectorAll(".nav-item-btn").forEach(b => b.classList.remove("active"));
       
-      // Set active button
       const target = e.currentTarget;
       target.classList.add("active");
       
-      // Route tab
       activeTab = target.dataset.tab;
       loadView(activeTab);
     });
@@ -141,7 +168,6 @@ function loadView(tabId) {
   panelTitle.textContent = config.title;
   panelStatus.textContent = config.status;
   
-  // Transition content cleanly
   panelView.style.opacity = 0;
   setTimeout(() => {
     config.init(panelView);
@@ -172,7 +198,62 @@ function setupSettings() {
     } else {
       apiKeyInput.value = "";
     }
+    
+    // Fill Sound settings values
+    soundMasterToggle.checked = playerState.soundSettings.master;
+    soundSfxToggle.checked = playerState.soundSettings.sfx;
+    soundAmbienceToggle.checked = playerState.soundSettings.ambience;
+    
+    // Fill Supabase sync settings
+    supabaseUrlInput.value = playerState.supabaseConfig.url || "";
+    supabaseKeyInput.value = playerState.supabaseConfig.key || "";
+    supabaseUuidInput.value = playerState.supabaseConfig.userId || "";
+    
+    // Fill Export text state
+    importExportTextarea.value = JSON.stringify(playerState, null, 2);
+    
     apiModal.classList.add("active");
+  });
+
+  // Copy Sync ID button
+  btnCopySyncId.addEventListener("click", () => {
+    supabaseUuidInput.select();
+    document.execCommand("copy");
+    alert("User Sync ID copied to clipboard!");
+  });
+
+  // Copy Sync Link button
+  btnCopySyncLink.addEventListener("click", () => {
+    const serialized = btoa(unescape(encodeURIComponent(JSON.stringify(playerState))));
+    const link = window.location.origin + window.location.pathname + '#sync=' + serialized;
+    
+    // Create temp input to copy
+    const tempInput = document.createElement("input");
+    tempInput.value = link;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+    
+    alert("Shareable Grimoire Sync Link copied to clipboard! Send this link to your friend so they can import your progress directly.");
+  });
+
+  // Import State button
+  btnImportState.addEventListener("click", () => {
+    try {
+      const parsed = JSON.parse(importExportTextarea.value);
+      if (parsed && typeof parsed === "object" && parsed.level !== undefined) {
+        if (confirm("Are you sure you want to overwrite your state with this backup?")) {
+          localStorage.setItem("void_killer_player_state", JSON.stringify(parsed));
+          alert("State imported successfully. Reloading Grimoire!");
+          window.location.reload();
+        }
+      } else {
+        alert("Invalid state structure. Must be a valid Void Killer save object.");
+      }
+    } catch (e) {
+      alert("Failed to parse JSON state: " + e.message);
+    }
   });
 }
 
@@ -186,14 +267,41 @@ function checkApiKeyStatus() {
 
 // Save Key / Offline Mode Modal Handlers
 apiSaveBtn.addEventListener("click", () => {
+  // Save Gemini Key
   const key = apiKeyInput.value.trim();
   if (key) {
     setApiKey(key);
     localStorage.setItem("void_killer_offline_flag", "false");
-    alert("Gemini key saved successfully. Elden Pathogen API active.");
   } else {
     setApiKey(null);
   }
+  
+  // Save Sound Settings
+  playerState.soundSettings.master = soundMasterToggle.checked;
+  playerState.soundSettings.sfx = soundSfxToggle.checked;
+  playerState.soundSettings.ambience = soundAmbienceToggle.checked;
+  
+  // Save Supabase Sync configuration
+  const oldUrl = playerState.supabaseConfig.url;
+  const oldKey = playerState.supabaseConfig.key;
+  
+  playerState.supabaseConfig.url = supabaseUrlInput.value.trim();
+  playerState.supabaseConfig.key = supabaseKeyInput.value.trim();
+  
+  savePlayerState();
+
+  // If Supabase changed, re-initialize
+  if (playerState.supabaseConfig.url !== oldUrl || playerState.supabaseConfig.key !== oldKey) {
+    initSupabase();
+  }
+
+  // Handle ambient audio state
+  if (canPlaySound('ambience')) {
+    startAmbientDrone();
+  } else {
+    stopAmbientDrone();
+  }
+
   apiModal.classList.remove("active");
   updateHud();
 });
@@ -201,6 +309,21 @@ apiSaveBtn.addEventListener("click", () => {
 apiOfflineBtn.addEventListener("click", () => {
   setApiKey("offline");
   localStorage.setItem("void_killer_offline_flag", "true");
+  
+  // Also save settings toggles in offline mode
+  playerState.soundSettings.master = soundMasterToggle.checked;
+  playerState.soundSettings.sfx = soundSfxToggle.checked;
+  playerState.soundSettings.ambience = soundAmbienceToggle.checked;
+  
+  savePlayerState();
+  
+  // Handle ambient audio state
+  if (canPlaySound('ambience')) {
+    startAmbientDrone();
+  } else {
+    stopAmbientDrone();
+  }
+
   apiModal.classList.remove("active");
   updateHud();
 });
@@ -210,6 +333,90 @@ function setupFocusMode() {
   focusToggleBtn.addEventListener("click", () => {
     document.body.classList.toggle("focus-mode");
   });
+}
+
+// Web Audio API ambient hum synth
+function startAmbientDrone() {
+  if (ambientAudioCtx) return; // Already running
+  
+  try {
+    ambientAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Low frequency drone oscillators (Harmonics at A1 55Hz and detuned E2 82Hz)
+    droneOsc1 = ambientAudioCtx.createOscillator();
+    droneOsc1.type = 'sawtooth';
+    droneOsc1.frequency.setValueAtTime(55, ambientAudioCtx.currentTime);
+    
+    droneOsc2 = ambientAudioCtx.createOscillator();
+    droneOsc2.type = 'triangle';
+    droneOsc2.frequency.setValueAtTime(82.4, ambientAudioCtx.currentTime);
+    droneOsc2.detune.setValueAtTime(4, ambientAudioCtx.currentTime);
+    
+    // Low pass filter to create a muffled dungeon drone
+    filterNode = ambientAudioCtx.createBiquadFilter();
+    filterNode.type = 'lowpass';
+    filterNode.frequency.setValueAtTime(110, ambientAudioCtx.currentTime);
+    filterNode.Q.setValueAtTime(2.5, ambientAudioCtx.currentTime);
+    
+    // LFO modulator to pulse the volume (0.07Hz = 1 cycle per 14s)
+    modulatorOsc = ambientAudioCtx.createOscillator();
+    modulatorOsc.type = 'sine';
+    modulatorOsc.frequency.setValueAtTime(0.07, ambientAudioCtx.currentTime);
+    
+    modulatorGain = ambientAudioCtx.createGain();
+    modulatorGain.gain.setValueAtTime(0.025, ambientAudioCtx.currentTime);
+    
+    // Master drone gain node
+    droneGain = ambientAudioCtx.createGain();
+    droneGain.gain.setValueAtTime(0.035, ambientAudioCtx.currentTime);
+    
+    // Connect nodes
+    modulatorOsc.connect(modulatorGain);
+    modulatorGain.connect(droneGain.gain);
+    
+    droneOsc1.connect(filterNode);
+    droneOsc2.connect(filterNode);
+    filterNode.connect(droneGain);
+    droneGain.connect(ambientAudioCtx.destination);
+    
+    // Start oscillators
+    droneOsc1.start(0);
+    droneOsc2.start(0);
+    modulatorOsc.start(0);
+    
+    console.log("Dark background ambient drone started.");
+  } catch (err) {
+    console.warn("Ambient Web Audio error:", err);
+  }
+}
+
+function stopAmbientDrone() {
+  try {
+    if (droneOsc1) { droneOsc1.stop(); droneOsc1 = null; }
+    if (droneOsc2) { droneOsc2.stop(); droneOsc2 = null; }
+    if (modulatorOsc) { modulatorOsc.stop(); modulatorOsc = null; }
+    if (ambientAudioCtx) { ambientAudioCtx.close(); ambientAudioCtx = null; }
+    console.log("Dark background ambient drone stopped.");
+  } catch (e) {
+    console.warn("Failed to stop ambient drone:", e);
+  }
+}
+
+// Bind Autoplay activation on first interaction
+function initAudioAutoPlay() {
+  const triggerStart = () => {
+    if (canPlaySound('ambience')) {
+      startAmbientDrone();
+    }
+    // Remove listeners once activated
+    window.removeEventListener('click', triggerStart);
+    window.removeEventListener('keydown', triggerStart);
+    window.removeEventListener('touchstart', triggerStart);
+  };
+  
+  window.addEventListener('click', triggerStart);
+  window.addEventListener('keydown', triggerStart);
+  window.addEventListener('touchstart', triggerStart);
 }
 
 // Global state sync listener
@@ -225,7 +432,6 @@ window.addEventListener("player-level-up", (e) => {
 });
 
 function triggerLevelUpBanner(level) {
-  // Create fullscreen flash and banner
   const banner = document.createElement("div");
   banner.setAttribute("style", `
     position: fixed;
@@ -251,8 +457,10 @@ function triggerLevelUpBanner(level) {
   
   document.body.appendChild(banner);
   
-  // Sound effect (Web Audio API synthetic chime)
-  playLevelUpChime();
+  // Respect sound rules
+  if (canPlaySound('sfx')) {
+    playLevelUpChime();
+  }
   
   banner.querySelector("button").addEventListener("click", () => {
     banner.style.animation = "fadeOut 0.4s ease forwards";
@@ -263,8 +471,6 @@ function triggerLevelUpBanner(level) {
 function playLevelUpChime() {
   try {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    // Chord synthesis: Root + Third + Fifth + Octave
     const freqs = [220, 277.18, 329.63, 440, 554.37]; // A Major open chord
     const now = audioCtx.currentTime;
     
@@ -275,7 +481,6 @@ function playLevelUpChime() {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(f, now);
       
-      // Delay triggers for arpeggio
       const triggerTime = now + (idx * 0.12);
       gainNode.gain.setValueAtTime(0, now);
       gainNode.gain.linearRampToValueAtTime(0.25, triggerTime + 0.05);
